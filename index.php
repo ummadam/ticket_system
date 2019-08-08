@@ -10,9 +10,10 @@
 <body>
     <div class="container">
        <form action="" method="POST">
-        <input type="submit" name="user" value="Admin"><br>
-        <input type="submit" name="user" value="User1"><br>
-        <input type="submit" name="user" value="User2"><br>
+        <input type="hidden" name="action" value="login"><br>
+        <input type="submit" name="login" value="Admin"><br>
+        <input type="submit" name="login" value="baukaman"><br>
+        <input type="submit" name="login" value="diko"><br>
        </form>
     </div>
 </body>
@@ -20,10 +21,22 @@
 <?php
 
 include 'DB.php';
+session_start();
+
+if(isset($_POST['action'])) {
+    $r = $_POST['action'];
+
+    if($r == 'addTicket') {
+        echo '<span class="badge badge-success">ticket added successfully</span>';
+    } else if($r == 'login') {
+        $user = $_POST['login'];
+        $_SESSION['user'] = $user;
+    }
+}
 
 
-if(isset($_POST['user'])){
-    $user = $_POST['user'];
+if(isset($_SESSION['user'])){
+    $user = $_SESSION['user'];
 
     $stmt = $pdo->prepare("
         SELECT *  
@@ -34,12 +47,14 @@ if(isset($_POST['user'])){
     
 ");
 
-$stmt->execute([
-    ':un' => $user
-]);
-$tickets = $stmt->fetchALL();
+    $stmt->execute([
+        ':un' => $user
+    ]);
+    $tickets = $stmt->fetchALL();
+} else {
+    $tickets = array();
 }
-//print_r($tickets);
+    //print_r($tickets);
 ?>
 
 <table class="table">
@@ -69,28 +84,28 @@ $tickets = $stmt->fetchALL();
   </tbody>
 </table>
 <?php
-if($_POST['user'] != 'Admin'){
+//if($_POST['user'] != 'Admin'){
   
   
-}
+//}
 
 ?>
-<form action="" method="post" id="form">
-<input type="text" name="name">
-<input type="text" name="touser" >
-<input type="text" name="fromuser">
-<input type="text" name="problem">
-<input type="submit" name="Add" value="AddTicket">
+<form action="" method="post" id="form" style="display: none">
+    <input type="text" name="name">
+    <input type="text" name="touser" >
+    <input type="text" name="fromuser">
+    <input type="text" name="problem">
+    <input type="submit" name="action" value="addTicket">
 </form>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script>
 $(document).ready(function(){
   $("#show").click(function(){
-    $("form").toggle();
+    $("#form").toggle();
   });
 });
 </script>
-<button id="show">Show</button>
+<button id="show">new ticket</button>
 
 
 
