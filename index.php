@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -10,43 +10,67 @@
 <body>
     <div class="container">
        <form action="" method="POST">
-        <input type="submit" name="user" value="Admin"><br>
-        <input type="submit" name="user" value="User1"><br>
-        <input type="submit" name="user" value="User2"><br>
+        <input type="hidden" name="action" value="login"><br>
+        <input type="submit" name="login" value="Admin"><br>
+        <input type="submit" name="login" value="User1"><br>
+        <input type="submit" name="login" value="User2"><br>
        </form>
     </div>
 </body>
 </html>
 <?php
-
 include 'DB.php';
+session_start();
+if(isset($_POST['action'])) {
+    $r = $_POST['action'];
+    if($r == 'addTicket') {
+      $stmt = $pdo->prepare("
+        INSERT INTO 
+            `tickets` (
+                `username`,
+                `problem`
+            ) VALUES(
+                :un,
+                :p            
+                )
+    ");
 
-
-if(isset($_POST['user'])){
-    $user = $_POST['user'];
-
+      $stmt->execute([
+          ':un' => $_POST['username'],
+          ':p' => $_POST['problem']
+      ]);
+        echo '<span class="badge badge-success">ticket added successfully</span>';
+    } else if($r == 'login') {
+        $user = $_POST['login'];
+        $_SESSION['user'] = $user;
+    }
+    else if($r == 'ok'){
+      echo $_POST['username']. ' : ' . $_POST['text'];
+    }
+}
+if(isset($_SESSION['user'])){
+    $user = $_SESSION['user'];
     $stmt = $pdo->prepare("
         SELECT *  
         FROM `tickets`
-        LEFT JOIN `users`
-        ON `tickets`.`id_user`=`users`.`id`
-        WHERE `users`.`name` = :un;
+        WHERE `username` = :un;
     
 ");
-
-$stmt->execute([
-    ':un' => $user
-]);
-$tickets = $stmt->fetchALL();
+    $stmt->execute([
+        ':un' => $user
+    ]);
+    $tickets = $stmt->fetchALL();
+} else {
+    $tickets = array();
 }
-//print_r($tickets);
+    //print_r($tickets);
 ?>
 
 <table class="table">
   <thead>
     <tr>
-      <th scope="col">From</th>
-      <th scope="col">To</th>
+      <th scope="col">Id</th>
+      <th scope="col">User Name</th>
       <th scope="col">Problem</th>
     </tr>
   </thead>
@@ -54,46 +78,57 @@ $tickets = $stmt->fetchALL();
     <?php foreach($tickets as $ticket){
         echo '<tr>';
         echo '<td>';
-        echo $ticket['fromuser'];
+        echo $ticket['id'];
         echo '</td>';
         echo '<td>';
-        echo $ticket['touser'];
+        echo $ticket['username'];
         echo '</td>';
         echo '<td>';
         echo $ticket['problem'];
         echo '</td>';
-        echo '<tr>';
+        echo '<td>';
+        echo '<input type="submit" id="chat" value="startChat">';
+        echo '</td>';
+        echo '<td>';
+       ?>
+        <form action="" method="post" id="form1" style="display: none">
+            <input type="text" name="username">
+            <input type="text" name="text">
+            <input type="submit" name="action" value="ok">
+        </form>
 
+       <?php
+        echo '</td>';
+        echo '<tr>';
     }
     ?>
   </tbody>
 </table>
 <?php
-if($_POST['user'] != 'Admin'){
-  
-  
-}
-
+if($user == 'Admin'){
+  die(); 
+} 
 ?>
-<form action="" method="post" id="form">
-<input type="text" name="name">
-<input type="text" name="touser" >
-<input type="text" name="fromuser">
-<input type="text" name="problem">
-<input type="submit" name="Add" value="AddTicket">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+  $("#chat").click(function(){
+    $("#form1").toggle();
+  });
+});
+</script>
+<form action="" method="post" id="form" style="display: none">
+    <input type="text" name="username">
+    <input type="text" name="problem">
+    <input type="submit" name="action" value="addTicket">
 </form>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
 <script>
 $(document).ready(function(){
   $("#show").click(function(){
-    $("form").toggle();
+    $("#form").toggle();
   });
 });
 </script>
-<button id="show">Show</button>
-
-
-
-
-
-
+<button id="show">new ticket</button>
